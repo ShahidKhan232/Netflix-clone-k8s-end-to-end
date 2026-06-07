@@ -17,8 +17,8 @@ pipeline{
         stage('Install Dependencies') {
             steps {
                 dir('Application-Code') {
-                    // Use the repo's lockfile and the agent's Node/Yarn runtime instead of Docker.
-                    sh 'yarn install --frozen-lockfile'
+                    // Use the standard npm path on the agent instead of Yarn.
+                    sh 'npm install'
                 }
             }
         }
