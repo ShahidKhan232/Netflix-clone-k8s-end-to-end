@@ -16,36 +16,39 @@ pipeline{
         }
         stage('Install Dependencies') {
             steps {
-                script {
-                    docker.image('node:20-bullseye').inside {
-                        dir('Application-Code') {
-                            // Install project dependencies (needed for OWASP + build)
-                            sh 'npm install'
-                        }
-                    }
+                dir('Application-Code') {
+                    // Install project dependencies inside a Node container so the agent's host Node is not used.
+                    sh '''
+                    docker run --rm \
+                        -v "$PWD":/workspace \
+                        -w /workspace \
+                        node:20-bullseye \
+                        npm install
+                    '''
                 }
             }
         }
         stage("SonarQube Analysis") {
             steps {
-                script {
-                    docker.image('node:20-bullseye').inside {
-                        dir('Application-Code') {
-                            withSonarQubeEnv('sonar-server') {
-                                // Run SonarQube scanner using npx (no global install)
-                                sh '''
-                                echo "🔍 Starting SonarQube Analysis..."
-                                npx @sonar/scan \
-                                -Dsonar.projectKey=NetflixClone \
-                                -Dsonar.projectName=NetflixClone \
-                                -Dsonar.sources=src \
-                                -Dsonar.language=ts \
-                                -Dsonar.exclusions=dist/**,node_modules/**,public/** \
-                                -Dsonar.host.url=$SONAR_HOST_URL \
-                                -Dsonar.login=$SONAR_AUTH_TOKEN
-                                '''
-                            }
-                        }
+                dir('Application-Code') {
+                    withSonarQubeEnv('sonar-server') {
+                        // Run SonarQube scanner inside a Node container so the agent's host Node is not used.
+                        sh '''
+                        docker run --rm \
+                            -e SONAR_HOST_URL \
+                            -e SONAR_AUTH_TOKEN \
+                            -v "$PWD":/workspace \
+                            -w /workspace \
+                            node:20-bullseye \
+                            sh -lc 'echo "🔍 Starting SonarQube Analysis..." && npx -y @sonar/scan \
+                            -Dsonar.projectKey=NetflixClone \
+                            -Dsonar.projectName=NetflixClone \
+                            -Dsonar.sources=src \
+                            -Dsonar.language=ts \
+                            -Dsonar.exclusions=dist/**,node_modules/**,public/** \
+                            -Dsonar.host.url=$SONAR_HOST_URL \
+                            -Dsonar.login=$SONAR_AUTH_TOKEN'
+                        '''
                     }
                 }
             }
