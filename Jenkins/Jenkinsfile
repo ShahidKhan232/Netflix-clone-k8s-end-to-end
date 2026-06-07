@@ -1,5 +1,8 @@
 pipeline{
     agent any
+    tools{
+        nodejs 'nodejs'
+    }
     environment {
         SCANNER_HOME=tool 'sonar-server'
     }
@@ -11,13 +14,13 @@ pipeline{
         }
         stage('Checkout from Git'){
             steps{
-                git branch: 'main', url: 'https://github.com/ShahidKhan232/Netflix-clone-k8s-end-to-end.git'
+                git branch: 'master', url: 'https://github.com/AmanPathak-DevOps/Netflix-Clone-K8S-End-to-End-Project.git'
             }
         }
         stage('Install Dependencies') {
             steps {
                 dir('Application-Code') {
-                    // Use the standard npm path on the agent instead of Yarn.
+                    // Install project dependencies (needed for OWASP + build)
                     sh 'npm install'
                 }
             }
@@ -26,10 +29,10 @@ pipeline{
             steps {
                 dir('Application-Code') {
                     withSonarQubeEnv('sonar-server') {
-                        // Run the scanner directly so this stage does not depend on Docker.
+                        // Run SonarQube scanner using npx (no global install)
                         sh '''
                         echo "🔍 Starting SonarQube Analysis..."
-                        npx -y @sonar/scan \
+                        npx @sonar/scan \
                         -Dsonar.projectKey=NetflixClone \
                         -Dsonar.projectName=NetflixClone \
                         -Dsonar.sources=src \
