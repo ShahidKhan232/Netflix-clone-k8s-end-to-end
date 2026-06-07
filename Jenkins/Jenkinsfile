@@ -33,8 +33,8 @@ pipeline{
                         sh '''
                         echo "🔍 Starting SonarQube Analysis..."
                         npx @sonar/scan \
-                        -Dsonar.projectKey=NetflixClone \
-                        -Dsonar.projectName=NetflixClone \
+                        -Dsonar.projectKey=Netflixclone \
+                        -Dsonar.projectName=Netflixclone \
                         -Dsonar.sources=src \
                         -Dsonar.language=ts \
                         -Dsonar.exclusions=dist/**,node_modules/**,public/** \
